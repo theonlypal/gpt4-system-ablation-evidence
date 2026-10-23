@@ -16,13 +16,15 @@ body = re.sub(r'\\D\{[^{}]+\}', '', body)
 body = re.sub(r'\\cite[pt]?\{[^{}]+\}|\\(?:ref|label)\{[^{}]+\}', '', body)
 body = re.sub(r'\\setlength\{[^{}]+\}\{[^{}]+\}', '', body)
 body = re.sub(r'\\begin\{verbatim\}.*?\\end\{verbatim\}', '', body, flags=re.S)
+# Mathematical constants in the explicitly stated Wilson formula are not observations.
+body = re.sub(r'\\\[.*?\\\]', '', body, flags=re.S)
 body = re.sub(r'https?://[^}\s]+', '', body)
 body = re.sub(r'\b[0-9a-f]{40,64}\b', '', body)
-body = re.sub(r'GPT-(?:3\.5|4(?:-0613)?|5\.[256])|PCCG-[12]', '', body)
+body = re.sub(r'[Gg][Pp][Tt]-(?:3\.5|4(?:-0613)?|5\.[256])|PCCG-[12]', '', body)
 body = re.sub(r'UTF-8|SHA-256|V[012]', '', body)
 body = re.sub(r'core\\_\d+|equivalence\\_\d+', '', body)
 body = re.sub(r'void-matrix-evidence-v1\.0\.0/study/', '', body)
-body = re.sub(r'October 21|Section 4\.1', '', body)
+body = re.sub(r'October (?:21|22|23)(?:, 2026)?|July 2026|Section 4\.1', '', body)
 leftovers = [(i, s) for i, s in enumerate(body.splitlines(), 1) if re.search(r'\d', s)]
 if leftovers:
     raise SystemExit(f'Unapproved literal numerals in manuscript body: {leftovers}')

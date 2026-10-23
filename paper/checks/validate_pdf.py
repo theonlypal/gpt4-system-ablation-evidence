@@ -16,17 +16,25 @@ for key in used:
     if value not in text:
         raise SystemExit(f'Generated value missing from PDF: {key} = {value}')
 checked = 0
-for name in ('prompts', 'aggregate', 'focal', 'strata', 'controls', 'cross', 'cross_full', 'no_system_controls'):
+for name in ('prompts', 'aggregate', 'focal', 'strata', 'controls', 'cross', 'cross_full', 'no_system_controls', 'precision'):
     for line in (root / 'generated' / (name + '.tex')).read_text().splitlines():
         if ' & ' not in line:
             continue
         clean = re.sub(r'\\textit\{([^}]+)\}', r'\1', line)
-        clean = clean.replace('\\_', '_').replace('\\&', '&').replace('\\\\', '').replace('&', '')
+        clean = clean.replace('\\_', '_').replace('\\&', '&').replace('\\%', '%').replace('--', '–').replace('\\\\', '').replace('&', '')
         if norm(clean) not in text:
             raise SystemExit(f'Table row not found verbatim in PDF ({name}): {clean}')
         checked += 1
 if '??' in text:
     raise SystemExit('Unresolved PDF reference')
+assert 'October22,2026' in text, 'manuscript date missing'
+assert source.index(r'\label{fig:ablation}') < source.index(r'\section{Introduction}'), 'Figure 1 not before introduction'
+for fig, expected in [('ablation', 'Same model, same inputs'), ('no_system', 'Zero-byte continuation')]:
+    assert norm(expected) in text, 'figure caption missing: ' + fig
+for row in json.loads((root / 'generated/no_system_figure.json').read_text()):
+    assert norm(row['model_id']) in text
+    assert f"{row['V0']}/{row['N']}" in text
+    assert f"{row['control_R']}/{row['control_N']}" in text
 for entry in json.loads((root / 'generated/chronology.json').read_text()):
     assert norm(entry['title']) in text, 'chronology title absent: ' + entry['title']
     assert entry['date'] in text, 'chronology date absent: ' + entry['date']

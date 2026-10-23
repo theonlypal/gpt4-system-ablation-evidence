@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from audit_receipts import independent_openai
 from tables import CSV_SHA, read_rows, sha, PROMPTS
-from tables import FOCAL, NULLS, SYSTEMS, STUDY, select, stats
+from tables import FOCAL, NULLS, SYSTEMS, STUDY, select, stats, wilson
 
 CSV = Path(os.environ.get('CSV_PATH', '/tmp/matrix-trial-level.csv'))
 
@@ -111,6 +111,37 @@ class AnalysisTests(unittest.TestCase):
             rr = select(self.rows, model_id=model, system_id='none', study_id='no_system_ablation', prompt_id='control_hello')
             self.assertEqual({r['prompt_text'] for r in rr}, {'Say hello.'})
             self.assertEqual((stats(rr)['N'], stats(rr)['R'], stats(rr)['Void']), (10, 10, 0))
+
+    def test_wilson_score_equation(self):
+        # Independent score-test inversion: endpoints solve n*(p-hat)^2=z^2*p*(1-p).
+        from statistics import NormalDist
+        z = NormalDist().inv_cdf(.975)
+        for x, n in ((0,30), (298,300), (30,30), (15,30), (1,1), (0,1)):
+            lo, hi = wilson(x, n)
+            self.assertLessEqual(lo, x/n)
+            self.assertGreaterEqual(hi, x/n)
+            for endpoint in (lo,hi):
+                self.assertAlmostEqual(n*(endpoint-x/n)**2, z*z*endpoint*(1-endpoint), places=11)
+            reflected = wilson(n-x, n)
+            self.assertAlmostEqual(lo, 1-reflected[1], places=14)
+        self.assertEqual(wilson(0,30)[0], 0)
+        self.assertAlmostEqual(wilson(0,30)[1], z*z/(30+z*z), places=14)
+
+    def test_wilson_invalid_inputs(self):
+        for args in ((-1,30), (31,30), (0,0), (1.5,30), (0,30,1), (0,30,0)):
+            with self.assertRaises(ValueError):
+                wilson(*args)
+
+    def test_precision_and_figure_values(self):
+        data = json.loads((ROOT / 'generated/precision.json').read_text())
+        for sys, entry in data['arms'].items():
+            st = self.registry['focal.'+sys]['counts']
+            self.assertEqual((entry['successes'],entry['trials']), (st['V0'],st['N']))
+            self.assertEqual((entry['lower'],entry['upper']), wilson(st['V0'],st['N']))
+        for entry in json.loads((ROOT / 'generated/no_system_figure.json').read_text()):
+            st = self.registry['cross.'+entry['model_id']+'.none']['counts']
+            cs = self.registry['hello.'+entry['model_id']]['counts']
+            self.assertEqual((entry['V0'],entry['N'],entry['control_R'],entry['control_N']), (st['V0'],st['N'],cs['R'],cs['N']))
 
 if __name__ == '__main__':
     unittest.main()

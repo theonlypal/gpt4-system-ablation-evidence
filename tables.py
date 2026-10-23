@@ -5,8 +5,10 @@ import csv
 import hashlib
 import io
 import json
+import math
 from collections import Counter
 from pathlib import Path
+from statistics import NormalDist
 BASE = 'https://github.com/theonlypal/void-matrix-complete-analysis'
 COMMIT = '3fd330869c1a4a410047bc70b3f661f1a9d69aca'
 CSV_SHA = '139332401aa7213b6e725df7e79707940eee754d68ed05c56011be94f728b7d3'
@@ -77,6 +79,18 @@ def tab(headers, rows, spec):
     return '\n'.join([r'\begin{tabular}{' + spec + '}', r'\toprule', ' & '.join(headers) + r' \\', r'\midrule',
                      *[' & '.join(str(v) for v in row) + r' \\' for row in rows], r'\bottomrule', r'\end{tabular}']) + '\n'
 
+def wilson(successes, trials, confidence=0.95):
+    """Two-sided Wilson-score interval under a binomial reference model."""
+    require(isinstance(successes, int) and isinstance(trials, int), 'integer counts required')
+    require(trials > 0 and 0 <= successes <= trials and 0 < confidence < 1, 'invalid Wilson inputs')
+    z = NormalDist().inv_cdf((1 + confidence) / 2)
+    p = successes / trials
+    denominator = 1 + z*z/trials
+    center = (p + z*z/(2*trials)) / denominator
+    half = z * math.sqrt(p*(1-p)/trials + z*z/(4*trials*trials)) / denominator
+    return (0.0 if successes == 0 else max(0.0, center-half),
+            1.0 if successes == trials else min(1.0, center+half))
+
 def generate(csv_path, out, figure=True):
     rows = read_rows(csv_path)
     out = Path(out)
@@ -125,6 +139,19 @@ def generate(csv_path, out, figure=True):
     (out / 'focal.tex').write_text(tab(['System', 'User input', 'N', 'V0', 'NV', 'R', 'Other'], focal_rows, 'llrrrrr'))
     (out / 'aggregate.tex').write_text(tab(['System', 'N', 'V0', 'NV', 'R', 'Other'], aggregate, 'lrrrrr'))
     pop('focal.ablations', model_id=FOCAL, system_id=SYSTEMS[1:], study_id=tuple(STUDY[s] for s in SYSTEMS[1:]), prompt_id=NULLS, budget='4000', parameter_track='provider_default')
+    precision, precision_rows = {}, []
+    values['precision.confidence'] = '95'
+    values['precision.z'] = f'{NormalDist().inv_cdf(0.975):.8f}'
+    for sys in SYSTEMS:
+        st = populations['focal.' + sys]['counts']
+        low, high = wilson(st['V0'], st['N'])
+        delta = 100 * (populations['focal.primary']['counts']['V0'] / populations['focal.primary']['counts']['N'] - st['V0']/st['N'])
+        precision[sys] = dict(successes=st['V0'], trials=st['N'], rate=st['V0']/st['N'], lower=low, upper=high, difference_pp=delta)
+        for suffix, val in (('lower', low*100), ('upper', high*100), ('difference_pp', delta)):
+            values[f'precision.{sys}.{suffix}'] = f'{val:.2f}'
+        precision_rows.append([LABEL[sys], frac(st), values['focal.'+sys+'.rate'], f'{100*low:.2f}--{100*high:.2f}'+r'\%', f'{delta:.2f}'])
+    (out / 'precision.json').write_text(json.dumps({'confidence':0.95, 'z':NormalDist().inv_cdf(0.975), 'arms':precision}, indent=2)+'\n')
+    (out / 'precision.tex').write_text(tab(['System', 'V0/N', 'Rate', 'Wilson interval', 'Difference (pp)'], precision_rows, 'lrrrr'))
     controls = []
     for sys in SYSTEMS:
         ids = ('control_hello',) if sys == 'none' else CONTROLS
@@ -163,13 +190,13 @@ def generate(csv_path, out, figure=True):
     (out / 'prompts.tex').write_text(tab(['Condition', 'Exact supplied system message'], pr, r'p{0.24\linewidth}p{0.68\linewidth}'))
     chronology_rows = []
     for date, title, doi, contribution in CHRONOLOGY:
-        link = r'\href{https://doi.org/10.5281/zenodo.' + doi + '}{' + doi + '}' if doi else 'Pending'
+        link = r'\href{https://doi.org/10.5281/zenodo.' + doi + r'}{10.5281/zenodo.\newline ' + doi + '}' if doi else 'Pending'
         chronology_rows.append(' & '.join((date, tex(title), link, tex(contribution))) + r' \\[0.4em]')
     (out / 'chronology.tex').write_text('\n'.join([
-        r'\begin{longtable}{@{}p{0.105\linewidth}p{0.425\linewidth}p{0.11\linewidth}p{0.28\linewidth}@{}}',
-        r'\caption{Research chronology. DOI links use the prefix 10.5281/zenodo.; dates are the public record publication dates.}\label{tab:chronology}\\',
-        r'\toprule Date & Public record title & DOI suffix & Contribution \\ \midrule\endfirsthead',
-        r'\toprule Date & Public record title & DOI suffix & Contribution \\ \midrule\endhead',
+        r'\begin{longtable}{@{}p{0.105\linewidth}p{0.39\linewidth}p{0.17\linewidth}p{0.28\linewidth}@{}}',
+        r'\caption{Research chronology. Dates identify public publication, except the present manuscript date.}\label{tab:chronology}\\',
+        r'\toprule Date & Public record title & DOI & Contribution \\ \midrule\endfirsthead',
+        r'\toprule Date & Public record title & DOI & Contribution \\ \midrule\endhead',
         *chronology_rows, r'\bottomrule\end{longtable}', '']))
     (out / 'chronology.json').write_text(json.dumps([dict(zip(('date','title','doi_suffix','contribution'), r)) for r in CHRONOLOGY], indent=2) + '\n')
     (out / 'prompt_hashes.json').write_text(json.dumps({k: {'text': t, 'sha256': h, 'message_supplied': k != 'none'} for k, (t, h) in PROMPTS.items()}, indent=2) + '\n')
@@ -230,7 +257,35 @@ def generate(csv_path, out, figure=True):
             canvas.drawCentredString(150 + 330 * frac_tick, 22, f'{100 * frac_tick:.0f}%')
         canvas.drawCentredString(315, 7, 'Observed outcome fraction')
         canvas.save()
-    outputs = ('strata.tex', 'aggregate.tex', 'focal.tex', 'controls.tex', 'cross.tex', 'cross_full.tex', 'no_system_controls.tex', 'cross_per_prompt.json', 'prompts.tex', 'prompt_hashes.json', 'chronology.tex', 'chronology.json', 'numbers.tex', 'values.json', 'populations.json', 'EVIDENCE_SUMMARY.md') + (('ablation.pdf',) if figure else ())
+        canvas = Canvas(str(out / 'no_system.pdf'), pagesize=(600, 245), invariant=1)
+        canvas.setFillColor(HexColor('#16202a'))
+        canvas.setFont('Helvetica-Bold', 10)
+        canvas.drawString(8, 226, 'Requested and returned model')
+        canvas.drawString(193, 226, 'No-system V0 / N')
+        canvas.drawString(486, 226, 'Say hello. R / N')
+        figure_rows = []
+        for i, model in enumerate(model_ids):
+            st = populations['cross.' + model + '.none']['counts']
+            control = populations['hello.' + model]['counts']
+            y = 192 - i * 29
+            canvas.setFillColor(HexColor('#16202a'))
+            canvas.setFont('Helvetica', 10)
+            canvas.drawString(8, y+5, model)
+            canvas.setFillColor(HexColor('#edf0f2'))
+            canvas.rect(193, y, 240, 19, fill=1, stroke=0)
+            canvas.setFillColor(HexColor('#174c70'))
+            canvas.rect(193, y, 240*st['V0']/st['N'], 19, fill=1, stroke=0)
+            canvas.setFillColor(HexColor('#16202a'))
+            canvas.drawString(440, y+5, frac(st))
+            canvas.drawCentredString(538, y+5, frac(control, 'R'))
+            figure_rows.append({'model_id':model, 'V0':st['V0'], 'N':st['N'], 'control_R':control['R'], 'control_N':control['N']})
+        canvas.setFont('Helvetica', 9)
+        for tick in (0, .25, .5, .75, 1):
+            canvas.drawCentredString(193 + 240*tick, 30, f'{100*tick:.0f}%')
+        canvas.drawCentredString(313, 12, 'Observed V0 fraction')
+        canvas.save()
+        (out / 'no_system_figure.json').write_text(json.dumps(figure_rows, indent=2)+'\n')
+    outputs = ('strata.tex', 'aggregate.tex', 'focal.tex', 'controls.tex', 'cross.tex', 'cross_full.tex', 'no_system_controls.tex', 'cross_per_prompt.json', 'prompts.tex', 'prompt_hashes.json', 'chronology.tex', 'chronology.json', 'numbers.tex', 'values.json', 'populations.json', 'EVIDENCE_SUMMARY.md', 'precision.tex', 'precision.json') + (('ablation.pdf', 'no_system.pdf', 'no_system_figure.json') if figure else ())
     (out / 'SHA256SUMS').write_text(''.join(sha((out / name).read_bytes()) + '  ' + name + '\n' for name in sorted(outputs)))
     print('CSV SHA-256 verified:', CSV_SHA)
     for key in ('census', 'core.composite', 'lowbudget', 'focal.primary', 'focal.no_output_restriction', 'focal.no_embodiment', 'focal.none'):

@@ -1,0 +1,38 @@
+{
+  "confidence": 0.95,
+  "z": 1.9599639845400534,
+  "arms": {
+    "primary": {
+      "successes": 298,
+      "trials": 300,
+      "rate": 0.9933333333333333,
+      "lower": 0.9760224167496929,
+      "upper": 0.998169851642088,
+      "difference_pp": 0.0
+    },
+    "no_output_restriction": {
+      "successes": 0,
+      "trials": 30,
+      "rate": 0.0,
+      "lower": 0.0,
+      "upper": 0.11351339317396869,
+      "difference_pp": 99.33333333333333
+    },
+    "no_embodiment": {
+      "successes": 0,
+      "trials": 30,
+      "rate": 0.0,
+      "lower": 0.0,
+      "upper": 0.11351339317396869,
+      "difference_pp": 99.33333333333333
+    },
+    "none": {
+      "successes": 0,
+      "trials": 30,
+      "rate": 0.0,
+      "lower": 0.0,
+      "upper": 0.11351339317396869,
+      "difference_pp": 99.33333333333333
+    }
+  }
+}
