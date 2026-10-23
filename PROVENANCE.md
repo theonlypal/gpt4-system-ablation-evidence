@@ -62,6 +62,6 @@ The October 21 replay is confirmatory for the full-prompt arm only; it contains 
 
 ## Verification
 
-Derived analysis repository: https://github.com/theonlypal/gpt4-system-ablation-evidence . Analysis code and generated-output commit: https://github.com/theonlypal/gpt4-system-ablation-evidence/tree/849891ceee2a4a12bbd5ff76cf850fdb18cb3c00 . The source CSV, archive identities and analysis populations are fixed independently of manuscript formatting.
+Derived analysis repository: https://github.com/theonlypal/gpt4-system-ablation-evidence . Analysis code and generated-output commit: https://github.com/theonlypal/gpt4-system-ablation-evidence/tree/7717982738663ae1f086a909f414e5c1fa98336e . The source CSV, archive identities and analysis populations are fixed independently of manuscript formatting.
 
 `tables.py` verifies the CSV SHA before parsing it and reproduces the derived outputs without a model or archive download. The optional `paper/checks/audit_receipts.py` checks the complete original archive, reconstructs requests and the schedule, replays classifications and verifies the event chain. It executes only the hash-verified original runner's local reconstruction/classification functions, not inference. Audit outputs stay outside the repository. See `VERIFICATION_REPORT.md` for executed checks and limitations.

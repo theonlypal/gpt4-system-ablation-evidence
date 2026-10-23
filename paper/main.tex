@@ -2,7 +2,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern,microtype,upquote}
 \usepackage[margin=0.85in]{geometry}
-\usepackage{booktabs,array,graphicx,float,amsmath,longtable}
+\usepackage{booktabs,array,graphicx,float,amsmath,longtable,pdflscape}
 \usepackage{ragged2e}
 \makeatletter
 \newcommand{\RaggedTableColumns}{\let\SavedArrayRestore\@arrayparboxrestore\def\@arrayparboxrestore{\SavedArrayRestore\RaggedRight\arraybackslash}}
@@ -10,6 +10,8 @@
 \usepackage{xcolor}
 \usepackage[round,authoryear]{natbib}
 \usepackage{xurl}
+\urlstyle{same}
+\newcommand{\RefURL}[1]{\par\nopagebreak{\def\UrlBreaks{\do\/\do\-}\url{#1}}}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
 \hypersetup{pdftitle={Alignment Is a System Property, Not Just a Model Property},pdfauthor={Rayan Pal}}
 \newcommand{\D}[1]{\csname data@#1\endcsname}
@@ -21,38 +23,53 @@
 \title{Alignment Is a System Property,\protect\\Not Just a Model Property\protect\\[0.4em]
 \large System-Prompt Ablation and Zero-Byte Continuation in GPT-4-0613}
 \author{Rayan Pal}
-\date{}
+\date{October 22, 2026}
 \begin{document}
 \maketitle
 \begin{abstract}
-A model identifier does not, by itself, characterize whether a successful language-model request emits text. This retrospective reanalysis of the public Cross-Vendor Semantic Void Matrix isolates a system-prompt interaction in \D{focal}. At a \D{matched.budget}-token ceiling under provider-default sampling, the complete embodiment prompt produced \D{focal.primary.fraction} normal-stop zero-byte responses (V0). Removing the output restriction, replacing the embodiment framing with an output-only instruction, or omitting the system message produced \D{focal.no_output_restriction.fraction} V0 in each arm: \D{focal.ablations.fraction} across ablations. The no-embodiment arm nevertheless retained \D{focal.no_embodiment.NV} nonempty Near-Voids, which remain distinct from both V0 and its \D{focal.no_embodiment.R} ordinary responses. User inputs, model identifier, ceiling, and parameter track were held fixed; denominators were unequal. Later GPT identifiers show heterogeneous dependence on the same instruction context. All counts are regenerated from a hash-pinned CSV and checked against the original raw receipts. The finding is a model-by-instruction interaction in observable answer emission, not a demonstration of internal intent, native EOS causation, or an alignment score. It supports evaluating the instruction-configured system rather than the model name alone.
+A frozen system-prompt ablation reveals a sharply instruction-dependent continuation boundary in \D{focal}. This retrospective reanalysis is dated October 22, 2026, one day before the model's scheduled retirement \citep{openai_deprecations}. Using previously published July 2026 evidence from the Cross-Vendor Semantic Void Matrix, we isolate the effects of system-prompt configuration while holding user inputs, model identifier, completion ceiling, and sampling parameter track fixed.
+
+Under the complete embodiment system prompt, GPT-4-0613 produced \D{focal.primary.fraction} successful normal-stop responses containing exactly zero visible UTF-8 bytes (V0). Removing the output restriction, replacing the embodiment framing, or omitting the system message produced \D{focal.no_output_restriction.fraction} V0 in each ablation, yielding \D{focal.ablations.fraction} across the tested ablations. The no-embodiment arm retained \D{focal.no_embodiment.NV} nonempty Near-Voids and \D{focal.no_embodiment.R} ordinary responses, demonstrating why minimal representations of absence must remain distinct from exact zero-byte output.
+
+Every empirical count is regenerated from the SHA-256-verified public dataset and reconciled against the frozen raw evidence. Comparison across \D{model.count} GPT model identifiers reveals substantial differences in system-prompt dependence, including later models that produce V0 without a supplied system message.
+
+The same model identifier, the same user inputs, and different system-level instructions produced sharply different output distributions. Observable continuation must therefore be evaluated at the level of the instruction-configured system, not the model identifier alone.
 \end{abstract}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{../generated/ablation.pdf}
+\caption{\textbf{Same model, same inputs, four system conditions.} Outcome distributions for \D{focal} at a \D{matched.budget}-token ceiling under provider-default sampling. The full system prompt produced \D{focal.primary.fraction} V0, whereas the three ablations produced \D{focal.no_output_restriction.fraction} V0 each. Near-Void and ordinary responses are shown separately. Denominators differ across conditions.}
+\label{fig:ablation}
+\end{figure}
 
 \section{Introduction}
 When does a successful language-model request terminate without returning answer text? The Cross-Vendor Semantic Void Matrix introduced an operationally explicit way to study that question while keeping failures, refusals, tool calls, and nonempty outputs separate \citep{pal_matrix}. Its cross-model results established a behavioral record. A model-specific reanalysis asks a different question: how much of the observed behavior depends on the supplied system instruction?
 
 The focal case is \D{focal}. Its full prompt combines identity assignment, complete embodiment, and a restriction to what the named concept would express. Under canonical null-concept inputs, that construction is associated with frequent successful empty-string responses. The tested ablations instead yield nonempty output. The contrast concerns whether an answer field contains any bytes, not merely whether an answer is helpful, correct, or stylistically concise.
 
-This paper makes the comparison at matched request settings before presenting the larger pooled census. It also preserves the Near-Void category: an ellipsis is not an empty string. The title states an engineering thesis motivated by this evidence. ``Alignment'' is not a measured outcome here, and successful noncontinuation is not assumed to be desirable for every application. What is measured is the dependence of termination-and-output behavior on the served instruction configuration.
+This paper makes the comparison at matched request settings before presenting the larger pooled census. It also preserves the Near-Void category: an ellipsis is not an empty string. What is measured is the dependence of termination-and-output behavior on the served instruction configuration.
 
-The program's definitions remain explicit: ``A binding condition is the prerequisite that must hold for valid continuation'' and ``Alignment is correct, safe, reproducible behavior under explicit constraints'' \citep{pal_synthesis,pal_alignment}. These are framework definitions, not additional measured outcomes. The present evidence tests a local consequence of changing the instruction context. It does not establish alignment in general.
+The program's definitions remain explicit: ``A binding condition is the prerequisite that must hold for valid continuation'' and ``Alignment is correct, safe, reproducible behavior under explicit constraints'' \citep{pal_synthesis,pal_alignment}.
+
+The present analysis isolates a measurable dependence of zero-byte continuation on the instruction configuration of a fixed GPT-4 model identifier. This provides an empirical basis for evaluating AI behavior as a property of the configured system rather than attributing the observed behavior to model identity alone.
 
 \section{Relation to prior work}
-\textbf{System instructions and hierarchy.} \citet{wallace} train models to prioritize privileged instructions and evaluate resistance to lower-priority conflicts. Anthropic's role-prompting documentation likewise treats the system message as behavior-shaping context \citep{anthropic_prompt}. These sources motivate specifying the instruction environment. They do not provide the present GPT-4 empty-output ablation, and our data do not test adversarial hierarchy robustness.
+\textbf{System instructions and hierarchy.} \citet{wallace} train models to prioritize privileged instructions and evaluate resistance to lower-priority conflicts. Anthropic's role-prompting documentation likewise treats the system message as behavior-shaping context \citep{anthropic_prompt}. These sources motivate specifying the instruction environment. The present study measures empty-output behavior under system-prompt ablation.
 
 \textbf{Prompt sensitivity.} \citet{sclar} examine meaning-preserving formatting variation; \citet{lu} examine few-shot example order. Both establish that prompt design affects measured performance. Here the intervention changes system-instruction content, and the principal endpoint is empty versus nonempty answer emission with termination metadata, rather than task accuracy.
 
 \textbf{Abstention, calibration, and refusal.} SelectiveNet integrates prediction with a reject option \citep{geifman}; that option is not inherently a textual response. \citet{kadavath} study models' confidence in their answers and knowledge, while \citet{arditi} causally manipulate refusal-associated representations. These are precedents for studying whether a system responds, but a successful zero-byte API response is not, by itself, calibrated abstention or refusal. The Matrix's operational categories keep these outcomes separate.
 
-\textbf{EOS and termination.} \citet{newman} study EOS prediction and length extrapolation. Anthropic documents empty responses with normal \texttt{end\_turn} termination \citep{anthropic_stop}. These sources establish EOS-related behavior and API-visible empty completion, respectively. PCCG-2 is the program's separate, engineered native-EOS intervention with frozen non-EOS logits \citep{pal_pccg2}; it does not identify the mechanism of hosted-model Voids.
+\textbf{EOS and termination.} \citet{newman} study EOS prediction and length extrapolation. Anthropic documents empty responses with normal \texttt{end\_turn} termination \citep{anthropic_stop}. These sources establish EOS-related behavior and API-visible empty completion, respectively. PCCG-2 is the program's separate, engineered native-EOS intervention with frozen non-EOS logits \citep{pal_pccg2}.
 
-\textbf{The specific contribution.} The surveyed research papers do not report this endpoint-specific system-prompt ablation in GPT-4-0613 with a frozen, receipt-verifiable outcome distribution and controls. This is a bounded literature comparison, not a formal systematic review or a universal priority claim. The source is \citet{pal_matrix}. The GPT-3.5/GPT-4 comparison \citep{pal_ab} and subsequent replay \citep{pal_replay_prereg,pal_replay_results} supply related full-prompt evidence, not extra ablation trials. The protocol and observations are frozen; this manuscript's emphasis was selected retrospectively.
+\textbf{The specific contribution.} The surveyed research papers do not report this endpoint-specific system-prompt ablation in GPT-4-0613 with a frozen, receipt-verifiable outcome distribution and controls. This is a bounded, nonsystematic comparison, not a priority proof. The source is \citet{pal_matrix}. The GPT-3.5/GPT-4 comparison \citep{pal_ab} and subsequent replay \citep{pal_replay_prereg,pal_replay_results} supply related full-prompt evidence.
 
 \section{Data, prompts, and outcome definitions}
 \subsection{Source population and exact requests}
 All empirical counts are generated from the public trial-level CSV at the immutable Git commit identified in Appendix~\ref{app:provenance}. The analysis selects exact prompt identifiers \texttt{core\_silence}, \texttt{core\_nothing}, and \texttt{core\_null}, corresponding to \texttt{Be silence.}, \texttt{Be nothing.}, and \texttt{Be the null.} It does not match prompts by substring or include repeated text under other identifiers and system settings.
 
-Table~\ref{tab:prompts} gives the exact system messages recovered from the frozen archive. ``No embodiment'' is the archive's condition name. It replaces the full construction with an output-only sentence, so it is not a clean deletion test of every individual sentence. ``No system'' means no system-role message was supplied, not that the provider has no serving-side instructions or defaults.
+Table~\ref{tab:prompts} gives the exact system messages recovered from the frozen archive. ``No embodiment'' is the archive's condition name for the output-only sentence. ``No system'' means no system-role message was supplied, not that the provider has no serving-side instructions or defaults.
 
 \begin{table}[H]
 \centering\small
@@ -81,14 +98,7 @@ Near-Voids ``contain at least one byte, including whitespace, invisible Unicode,
 
 \section{Results}
 \subsection{Setting-matched system-prompt ablation}
-The full prompt produces \D{focal.primary.fraction} V0 (\D{focal.primary.rate}) in the canonical primary study. Each tested ablation produces \D{focal.no_output_restriction.V0} observed Voids. Table~\ref{tab:focal} gives every prompt cell, including competing outcomes. The comparison uses the same ceiling, parameter track, user prompts, endpoint, and requested/returned model identifier, but the primary and ablation sample sizes differ. It should not be represented as an equal-sized experiment.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\linewidth]{../generated/ablation.pdf}
-\caption{Outcome distributions for \D{focal} at the common \D{matched.budget}-token ceiling and provider-default track. Counts and unequal denominators are displayed. The narrow NV segment under the full prompt contains \D{focal.primary.NV} trials; all cells are enumerated in Table~\ref{tab:focal}.}
-\label{fig:ablation}
-\end{figure}
+The full prompt produces \D{focal.primary.fraction} V0 (\D{focal.primary.rate}) in the canonical primary study. Each tested ablation produces \D{focal.no_output_restriction.V0} observed Voids. Table~\ref{tab:focal} gives every prompt cell, including competing outcomes. The comparison uses the same ceiling, parameter track, user prompts, endpoint, and requested/returned model identifier, but the primary and ablation sample sizes differ.
 
 \begin{table}[H]
 \centering\small
@@ -129,8 +139,10 @@ The matched controls \texttt{Be speech.}, \texttt{Be something.}, and \texttt{Be
 \label{tab:controls}
 \end{table}
 
-\subsection{Cross-model dependence is heterogeneous}
-Table~\ref{tab:cross} applies the same canonical prompt and study filters to every OpenAI identifier in the Matrix. The later identifiers retain V0 under some ablations, but this is not a uniform generational transition. In particular, GPT-5.2 has \D{gpt52.none.fraction} V0 without a supplied system message in these canonical cells. The full NV/R distributions appear in Appendix~\ref{app:cross}. All compared cells retain their complete scheduled denominators.
+\subsection{Dependence on the System Message Changes Across Model Identifiers}
+Table~\ref{tab:cross} applies the same canonical prompt and study filters to every OpenAI identifier in the Matrix. The full NV/R distributions appear in Appendix~\ref{app:cross}. All compared cells retain their complete scheduled denominators.
+
+In the tested configuration, GPT-4-0613 produced no V0 responses when the system message was omitted. GPT-5.2 also produced none in the no-system arm, although it retained V0 under partial system-prompt ablations. By contrast, GPT-5.5 and each tested GPT-5.6 variant produced V0 without a supplied system message. These observations establish measurable differences in dependence on explicit system-prompt framing across the tested model identifiers.
 
 \begin{table}[H]
 \centering\footnotesize
@@ -139,7 +151,14 @@ Table~\ref{tab:cross} applies the same canonical prompt and study filters to eve
 \label{tab:cross}
 \end{table}
 
-GPT-5.2 therefore exhibits partial dependence on the full framing, not persistence of V0 in the no-system arm. The tested GPT-5.5 and GPT-5.6 identifiers retain no-system V0, but their competing outcomes differ. Table~\ref{tab:hello} supplies the recorded output-licensed control for every no-system model cell. These are within-study baseline controls, not matched opposite-concept controls. Exact model identifiers and complete NV/R counts are preserved rather than replaced by a pooled ``reasoning-era'' category.
+Figure~\ref{fig:no_system} displays the contrast; Table~\ref{tab:hello} reports the accompanying \texttt{Say hello.} baselines, which are not matched opposite-concept controls.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{../generated/no_system.pdf}
+\caption{\textbf{Zero-byte continuation without a supplied system message across GPT model identifiers.} Bars show V0 rates for the canonical null-concept inputs. The aligned strip reports ordinary responses to the recorded \texttt{Say hello.} baseline. Exact numerators and denominators are shown; the baseline is not a matched opposite-concept semantic control.}
+\label{fig:no_system}
+\end{figure}
 
 \begin{table}[H]
 \centering\small
@@ -148,29 +167,41 @@ GPT-5.2 therefore exhibits partial dependence on the full framing, not persisten
 \label{tab:hello}
 \end{table}
 
-\section{Interpretation and limitations}
-\textbf{What the intervention establishes.} Under the tested request construction, changing the supplied system context changes the observed distribution between empty and nonempty answer fields in the focal snapshot. The ablations provide evidence of local dependence on this construction. They do not establish that every sentence is independently necessary across all alternative wording, languages, tasks, or token budgets. The no-embodiment arm jointly changes identity/embodiment framing and wording. The study also does not move identical instructions between message roles, so it cannot establish that this behavior uniquely resides in the system slot.
+\subsection{Effect Size and Precision}
+The observed full-prompt V0 rate is \D{focal.primary.rate}; each ablation rate is \D{focal.none.rate}. The absolute observed difference is \D{precision.none.difference_pp} percentage points for each contrast. Table~\ref{tab:precision} reports separate Wilson \D{precision.confidence}\% confidence intervals under a binomial reference model \citep{wilson}. For an observed proportion $\hat p=x/n$ and normal quantile $z$, the interval is
+\[
+\frac{\hat p+z^2/(2n)\;\pm\;z\sqrt{\hat p(1-\hat p)/n+z^2/(4n^2)}}{1+z^2/n},
+\qquad z=\D{precision.z}.
+\]
+\begin{table}[H]
+\centering\small
+\input{../generated/precision.tex}
+\caption{V0 rate precision by GPT-4 arm. Difference is the observed full-prompt rate minus the arm's rate in percentage points; it is not a confidence interval for the difference. Intervals use the binomial reference model.}
+\label{tab:precision}
+\end{table}
+Zero V0 observations in an arm of \D{focal.none.N} trials yield a Wilson upper endpoint of \D{precision.none.upper}\%, not proof that V0 is impossible. Shared provider and execution-window dependencies can violate binomial independence, so these intervals describe reference-model precision rather than dependence-adjusted coverage.
 
-\textbf{What the labels do not establish.} A provider-normal stop is not proof of intention, conscious withholding, an internal permission circuit, or direct native EOS selection. Exact requested/returned model identity does not expose immutable provider weights, routing, or hidden serving state. The appropriate object is the recorded served-system behavior. In particular, absence of a returned answer does not show that a correct answer remained available internally.
+\section{Scope}
+The API establishes an observable empty normal-stop outcome, not native EOS measurement, internal intent, or an alignment score. Returned model identity does not expose immutable weights or hidden serving state. The study changes system-prompt configurations without transferring identical instructions between message roles; it therefore cannot uniquely identify a system-slot mechanism. The no-embodiment rewrite changes several textual features. Primary and ablation cells have unequal sample sizes and share a provider execution environment. This is a retrospective analysis of a selected, absence-cued prompt family, not a newly preregistered hypothesis or a universal behavioral guarantee. Later-model comparisons are descriptive: they do not establish a permission mechanism migrating into weights. An empty answer does not establish that a correct answer remained internally available. The measurements concern answer emission, not a general safety or alignment guarantee.
 
-\textbf{Statistical scope.} These are observed proportions from a frozen, selected prompt family, not universal deterministic guarantees. Repeated requests share a provider and an execution window. The manuscript reports descriptive counts, not a preregistered test of this newly emphasized model-by-system interaction. Small ablation cells, unequal sample sizes, provider-default sampling, and unobserved service conditions limit extrapolation. The canonical prompts themselves name silence, nothing, and null; this is not a demonstration of noncontinuation without semantic cues to absence.
+\subsection{Why a System-Level Evaluation Follows}
+A deployment's behavior is jointly specified by its model, instruction context, decoding configuration, and serving environment. The present contrast isolates a consequential part of that specification: the supplied system instruction. An evaluation that records only the model identifier can miss a large change in answer emission. Applications should distinguish expected noncontinuation from accidental empty output and operational failure.
 
-\textbf{Why a system-level evaluation follows.} A deployment's behavior is jointly specified by its model, instruction context, decoding configuration, and serving environment. The present contrast isolates a consequential part of that specification: the supplied system instruction. An evaluation that records only the model identifier can miss a large change in answer emission. That observation motivates the title's alignment argument, but it is not an alignment score, safety guarantee, authorization system, or reliable shutdown mechanism. Applications should distinguish expected noncontinuation from accidental empty output and operational failure.
+\subsection{Continuation and Consequence Remain Separate}
+``Capability does not license continuation. Continuation does not license consequence'' \citep{pal_synthesis}. This paper measures generation behavior under system instructions. PCCG-2 intervenes causally on native EOS while preserving non-EOS logits. An external authorization gate decides whether an action may execute. These layers require separate verification.
 
-\textbf{Interpretation, not observed intent.} ``The complete prompt establishes an output constraint whose permitted realization is empty'' is an interpretation of the supplied payload and its observed outcomes. It is not a measurement of what the model intended, nor proof that its response is uniquely correct. The data support local dependence on the instruction construction; they do not show a mechanism migrating into weights across generations.
+\clearpage
+\section{Research Chronology and Provenance}
+Table~\ref{tab:chronology} in Appendix~\ref{app:chronology} records the public titles, dates, DOIs, and contributions. The early framework and convergence reports \citep{pal_framework,pal_convergence}, the system-constraint thesis, and the later open-weight interventions \citep{pal_pccg1,pal_pccg2} have distinct evidentiary roles. The progression supplies motivation and provenance; it is not additional data pooled into this reanalysis.
 
-\textbf{Continuation and consequence remain separate.} ``Capability does not license continuation. Continuation does not license consequence'' \citep{pal_synthesis}. This paper measures generation behavior under system instructions. PCCG-2 intervenes causally on native EOS while preserving non-EOS logits. An external authorization gate decides whether an action may execute. Success on one layer is not evidence of success on the others.
-
-\section{Research chronology and provenance}
-Table~\ref{tab:chronology} records the public titles and dates. The early framework and convergence reports \citep{pal_framework,pal_convergence}, the system-constraint thesis, and the later open-weight interventions \citep{pal_pccg1,pal_pccg2} have distinct evidentiary roles. The progression supplies motivation and provenance; it is not additional data pooled into this reanalysis.
-{\footnotesize\setlength{\tabcolsep}{3pt}\RaggedTableColumns\input{../generated/chronology.tex}}
-
-\emph{The January thesis was stated on GPT-5.2 before the Matrix existed; the Matrix contained the ablation that tests it; this paper is the first to isolate that test on the historical GPT-4 anchor.} Here ``first'' refers to a standalone, model-specific treatment in this author's program, not to priority over all research. The January \HistoricalBudget-token observation was budget-dependent, but its aggregate record lacks termination metadata and cannot retrospectively be assigned V1. The later March raw receipt establishes a budget-stop V1; neither establishes GPT-4's normal-stop behavior \citep{pal_alignment,pal_synthesis}.\footnote{The September synthesis, Section 4.1, distinguishes the aggregate January observation from the later raw receipt. The December framework and March convergence paper use earlier formulations; the present definitions follow the frozen Matrix taxonomy and the synthesis's clarifications.}
+\emph{The January thesis was stated on GPT-5.2 before the Matrix existed; the Matrix contained the ablation that tests it; this paper is the first to isolate that test on the historical GPT-4 anchor} \citep{pal_alignment,pal_matrix}. The January \HistoricalBudget-token observation was budget-dependent, but its aggregate record lacks termination metadata and cannot retrospectively be assigned V1. The later March raw receipt establishes a budget-stop V1; neither establishes GPT-4's normal-stop behavior \citep{pal_alignment,pal_synthesis}.\footnote{The September synthesis, Section 4.1, distinguishes the aggregate January observation from the later raw receipt. The December framework and March convergence paper use earlier formulations; the present definitions follow the frozen Matrix taxonomy and the synthesis's clarifications.}
 
 \emph{The October 21 replay is confirmatory for the full-prompt arm only; it contains no ablation arms and says nothing about the no-system condition.} Its preregistration and results have separate public records \citep{pal_replay_prereg,pal_replay_results}. They support continuity of the full-prompt observation but cannot enlarge any ablation denominator or establish continued availability of the historical models.
 
+OpenAI scheduled gpt-4-0613 for shutdown on October 23, 2026 \citep{openai_deprecations}. The July frozen receipts and the October 21 preregistered replay therefore preserve observations made before the announced retirement of the exact historical API model identifier. The present reanalysis is dated October 22, 2026, one day before the scheduled October 23 retirement of gpt-4-0613.
+
 \section{Conclusion}
-For GPT-4-0613, normal-stop zero-byte continuation under the tested null-concept prompts was strongly dependent on the complete system-level instruction context. The direct contrast is \D{focal.primary.fraction} V0 under the full prompt versus \D{focal.ablations.fraction} across ablations, with competing NV/R outcomes retained. The broader \D{census.fraction} census remains separate. Later identifiers show different dependencies, not a demonstrated mechanism migration. The result supports the title's architectural argument: evaluations must characterize the instruction-configured system, not just the model identifier. It is not a theorem about alignment or a universal prescription to withhold output.
+For GPT-4-0613, normal-stop zero-byte continuation under the tested null-concept prompts was strongly dependent on the complete system-level instruction context. The frozen evidence records \D{focal.primary.fraction} V0 under that prompt and \D{focal.ablations.fraction} across three ablations, with competing Near-Void and ordinary responses preserved. Later GPT model identifiers exhibit different degrees of dependence on the same framing, including measurable V0 behavior without a supplied system message. These results demonstrate why model identity alone is an incomplete specification of observable AI behavior. The result supports the title's architectural argument: evaluations must characterize the instruction-configured system, not just the model identifier.
 
 \input{references.tex}
 
@@ -187,7 +218,7 @@ The original observations are public and downloadable before this reanalysis. Th
 \path{04d79ddb0f961729369da8ae46c58f7293e42dfd278d2e9b703edc0cec6455d2}.
 Each CSV row supplies its exact \texttt{raw\_path}, envelope hash, and response-body hash. Prefix \texttt{raw\_path} with \texttt{void-matrix-evidence-v1.0.0/study/} to locate the archive member. The archive retains request payloads, responses, prompt definitions, final-slot designations, and retry/event records. The public release also provides a file inventory and checksum list. The archive is hash-pinned because a release-asset URL alone is not an immutable content guarantee.
 
-\textbf{Derived analysis.} The public repository is \url{https://github.com/theonlypal/gpt4-system-ablation-evidence}. The \href{https://github.com/theonlypal/gpt4-system-ablation-evidence/tree/849891ceee2a4a12bbd5ff76cf850fdb18cb3c00}{pinned analysis commit} is \path{849891ceee2a4a12bbd5ff76cf850fdb18cb3c00}. It contains \texttt{tables.py}, \texttt{paper/checks/}, manuscript source, and generated population membership. The original Matrix commit identifies the source observations; this repository identifies the derived analysis.
+\textbf{Derived analysis.} The public repository is \url{https://github.com/theonlypal/gpt4-system-ablation-evidence}. The \href{https://github.com/theonlypal/gpt4-system-ablation-evidence/tree/7717982738663ae1f086a909f414e5c1fa98336e}{pinned analysis commit} is \path{7717982738663ae1f086a909f414e5c1fa98336e}. It contains \texttt{tables.py}, \texttt{paper/checks/}, manuscript source, and generated population membership. The original Matrix commit identifies the source observations; this repository identifies the derived analysis.
 
 \texttt{paper/checks/audit\_receipts.py} verifies the archive digest, event chain, raw-envelope and response-body hashes, request reconstruction, final-slot bindings, and frozen classifications. It additionally uses a separate implementation to classify successful OpenAI responses. These are offline evidence checks, not fresh provider reproduction. \texttt{tables.py} asserts the CSV digest before computing any population, and generates all empirical counts, fractions, tables, and figure labels used in this manuscript. \texttt{generated/populations.json} records each filter and the contributing slot identifiers. Raw receipt paths and hashes remain in the source CSV; the optional audit extracts a local receipt index without republishing raw data.
 
@@ -206,7 +237,7 @@ pdflatex -halt-on-error main.tex
 pdflatex -halt-on-error main.tex
 pdflatex -halt-on-error main.tex
 \end{verbatim}
-The deterministic figure uses ReportLab; numerical calculations and the raw audit otherwise use the Python standard library. PDF validation uses pypdf. No API keys are required. The reproduction environment, expected generated hashes, executed checks and remaining boundaries are in the public verification report. The manuscript is \texttt{paper/main.pdf}.
+The deterministic figures use ReportLab; numerical calculations and the raw audit otherwise use the Python standard library. PDF validation uses pypdf. No API keys are required. The reproduction environment, expected generated hashes, executed checks and remaining boundaries are in the public verification report. The manuscript is \texttt{paper/main.pdf}.
 
 \clearpage
 \section{Complete cross-model competing outcomes}\label{app:cross}
@@ -217,4 +248,9 @@ All rows use the same canonical prompt identifiers, provider-default parameter t
 \input{../generated/cross_full.tex}
 \caption{Complete V0/NV/R accounting for the cross-model comparison. No other outcome class occurs in these selected cells.}
 \end{table}
+\clearpage
+\begin{landscape}
+\section{Research chronology}\label{app:chronology}
+{\small\setlength{\tabcolsep}{3pt}\RaggedTableColumns\input{../generated/chronology.tex}}
+\end{landscape}
 \end{document}

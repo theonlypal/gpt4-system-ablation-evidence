@@ -2,11 +2,13 @@
 
 **System-Prompt Ablation and Zero-Byte Continuation in GPT-4-0613.** Retrospective reanalysis of the frozen Cross-Vendor Semantic Void Matrix. Exact prompt cells, competing outcomes, controls, and cross-model comparisons are generated from a SHA-256-pinned public CSV. The setting-matched comparison is separate from the pooled primary census. No new inference is performed. [Results tables](generated/EVIDENCE_SUMMARY.md) · [Provenance](PROVENANCE.md) · [Verification](VERIFICATION_REPORT.md) · [Related work](RELATED_WORK.md).
 
-[Paper (PDF)](paper/main.pdf) · [Source](paper/main.tex) · [Release v1](https://github.com/theonlypal/gpt4-system-ablation-evidence/releases/tag/v1)
+[Paper (PDF)](paper/main.pdf) · [Source](paper/main.tex) · [Release v2](https://github.com/theonlypal/gpt4-system-ablation-evidence/releases/tag/v2)
+
+Rayan Pal. October 22, 2026. Figure 1 presents the setting-matched GPT-4 contrast; Figure 2 presents no-system V0 rates and the recorded `Say hello.` baselines across six model identifiers. [Wilson intervals](generated/precision.json) and every figure value are generated from the pinned CSV. The original `v1` release is preserved.
 
 ## Reproduce
 
-Python 3.11 or later; ReportLab 4.4.9 for the deterministic figure.
+Python 3.11 or later; ReportLab 4.4.9 for the deterministic figures.
 
 ```sh
 python3 -m pip install reportlab==4.4.9

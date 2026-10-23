@@ -45,3 +45,15 @@ PCCG-2 is the program's engineered native-EOS intervention with frozen non-EOS l
 ## Supported gap
 
 The surveyed research papers do not report the present endpoint-specific system-prompt ablation in GPT-4-0613, with frozen requests, byte counts, provider-normal stops, Near-Void accounting, and accompanying controls. This is a statement about the verified sources above, not a comprehensive negative about all literature. The contribution is the reproducible model-specific interaction in already public evidence, not the discovery of abstention, system-prompt sensitivity, or EOS itself.
+
+## Statistical method
+
+Edwin B. Wilson. Probable Inference, the Law of Succession, and Statistical Inference. Journal of the American Statistical Association 22(158):209-212, 1927. https://doi.org/10.1080/01621459.1927.10502953
+
+The four focal arms have separate two-sided Wilson 95% intervals calculated by score-test inversion. These are binomial reference-model intervals; shared provider and execution-window dependencies are not estimated or adjusted.
+
+## Historical API availability
+
+OpenAI. Deprecations: Legacy GPT model snapshots. Official API documentation, accessed 2026-10-22. https://developers.openai.com/api/docs/deprecations#2026-04-22-legacy-gpt-model-snapshots
+
+The documented shutdown date for gpt-4-0613 is October 23, 2026. The July observations and October 21 replay precede that scheduled date. The present reanalysis is dated October 22; no Zenodo deposit is claimed.
