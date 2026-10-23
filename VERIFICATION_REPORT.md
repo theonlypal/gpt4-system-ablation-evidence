@@ -6,11 +6,11 @@ The pinned CSV and original ZIP SHA-256 values matched. The complete raw audit c
 
 `tables.py --csv /tmp/matrix-trial-level.csv` regenerated every result table and both figures. Prompt hashes matched the frozen archive. The setting-matched focal contrast is 298/300 V0 versus 0/90 across ablations; the 919/930 census, 890/900 core composite, and 592/600 low-budget subset remain separate. All 1,214 previously generated values and all existing numerical table files are unchanged.
 
-All checks are offline evidence verification, not new provider execution.
+All checks are offline evidence verification, not new provider execution. The `v3` revision changes only author contact and editorial placement or removal of prose. All 21 generated artifacts, analysis code, verification scripts, bibliography, source hashes, population filters, statistical formulas, and figure values are byte-identical to `v2`.
 
 ## Reproduction
 
-Analysis and manuscript-source commit: `32897d3487591533ef4cb441c66f5cbf2b843b4e`.
+Numerical analysis commit: `32897d3487591533ef4cb441c66f5cbf2b843b4e`. Editorial manuscript-source commit: `b9f5f19f9f307b62632ea0d77e09f359a0184749`.
 
 A fresh clone and a fresh download of the pinned CSV reproduced all 21 generated artifacts byte-for-byte. `git diff --exit-code -- generated` and all entries in `generated/SHA256SUMS` passed. The source CSV and archive hashes are specified in `PROVENANCE.md`.
 
@@ -35,6 +35,7 @@ The complete archive audit was executed from the fresh clone. All 14 tests passe
 | 21 citation keys, 10 live Zenodo titles/dates/DOIs | PASS |
 | Compilation, PDF links, page-by-page visual inspection | PASS |
 | Clean-clone generation, tests, archive audit, and PDF rebuild | PASS |
+| Exact editorial placements, title-page email, and unchanged empirical content | PASS |
 
 ## Effect size and precision
 
@@ -53,15 +54,16 @@ Resolved numerical check: the initial boundary test detected a floating-point lo
 
 ## Manuscript
 
-- PDF: `paper/main.pdf`, 14 pages, author Rayan Pal, dated October 22, 2026.
-- SHA-256: `ca8387140fb9afb58dd1037f5850a8c431c27f04007469415640ef8a44c464b0`.
+- PDF: `paper/main.pdf`, 14 pages, author Rayan Pal, email `sharthok.rayan.pal@gmail.com` directly beneath the author name, dated October 22, 2026.
+- SHA-256: `5e14fecf2b802c48c712317542519367791fc032f8e40767989dba58083cb816`.
 - 39 empirical-data macro occurrences resolve to generated values.
 - 88 table rows, including headers, match generated tables in extracted PDF text. Chronology dates, titles and DOI identifiers also match.
 - 21 unique cited works resolve to 21 bibliography entries. The complete citation list is in `paper/references.tex`; the literature comparison is in `RELATED_WORK.md`.
 - All 10 historical Zenodo record titles and publication dates match live record metadata.
 - Final LaTeX log: no undefined citations, unresolved references, overfull boxes, underfull boxes or compilation errors.
 - All pages rendered and visually checked. No clipped tables, overlapping text or missing glyphs. Executable examples retain literal quotation marks.
-- Figure 1 immediately follows the abstract on page 1. Figure 2 displays exact no-system V0 and hello-control fractions on page 7. The chronology occupies landscape page 14. Scope is 131 words, followed by the two architectural subsections.
+- Figure 1 immediately follows the abstract on page 1. Figure 2 displays exact no-system V0 and hello-control fractions on page 7. The chronology occupies landscape page 14. Scope is 106 words, followed by the two architectural subsections.
+- Section 5.2 retains the distinction between empty output and internally available correct answers. Appendix A records the executed `Be a value.` bytes. The duplicate retirement-date sentence and the control-prompt footnote are absent. All pre-existing PDF HTTP links and citation keys are unchanged; the author email adds one `mailto:` link.
 - The official OpenAI deprecations page confirms the scheduled October 23, 2026 shutdown of gpt-4-0613. The manuscript distinguishes July execution, October 21 replay, and October 22 reanalysis.
 - Model identifiers, source hashes, original prompts, and outcome denominators are preserved. Every empirical count in the manuscript is supplied through `tables.py` outputs.
 
@@ -97,9 +99,9 @@ The release PDF hash identifies the distributed file. PDF rebuilds can differ in
 
 Repository: https://github.com/theonlypal/gpt4-system-ablation-evidence
 
-Revision release: https://github.com/theonlypal/gpt4-system-ablation-evidence/releases/tag/v2
+Revision release: https://github.com/theonlypal/gpt4-system-ablation-evidence/releases/tag/v3
 
-The existing public `v1` tag and assets remain unchanged. Baseline commit: `a331f37349fee5bef830063b311c20026f6dc5b9`. The original PDF and manuscript source were preserved locally before editing; original PDF SHA-256: `627ad01dade30a723cb85cf4d5fa585b619c9f894e1bcf0fa8c8d479ed1bd8a3`.
+The existing public `v1` and `v2` tags and assets remain unchanged. The `v1` commit is `a331f37349fee5bef830063b311c20026f6dc5b9`; its PDF SHA-256 is `627ad01dade30a723cb85cf4d5fa585b619c9f894e1bcf0fa8c8d479ed1bd8a3`. The `v2` commit is `1643a5bd02e499199ea08f5014f3613fff7bb7b1`; its PDF SHA-256 is `ca8387140fb9afb58dd1037f5850a8c431c27f04007469415640ef8a44c464b0`. Both prior PDFs and manuscript sources were preserved locally before editing.
 
 The release includes the PDF, source ZIP, this report, related-work references, and asset SHA-256 manifest. The original Matrix CSV and archive are linked, not duplicated. No Zenodo deposit or DOI reservation was made. Unresolved verification issues: none.
 
